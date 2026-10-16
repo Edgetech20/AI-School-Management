@@ -14,7 +14,7 @@ from app.repositories.system_settings import SystemSettingsRepository
 from app.schemas.attendance import AttendanceEventIn
 from app.services.attendance.service import AttendanceService
 from app.services.face.hybrid_learning import HybridLearningProcessor
-from app.services.face.index import FaceEncodingIndex
+from app.services.face.encoding_index import FaceEncodingIndex
 from app.services.face.recognizer import FaceRecognitionService
 from app.core.config import get_settings
 from app.core.timezone import now_ist_naive

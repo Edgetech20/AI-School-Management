@@ -87,7 +87,14 @@ class HybridLearningProcessor:
                 student_id=hit.student_id,
                 confidence=round(hit.confidence, 4),
             )
-            return None
+            student_name, class_name = self._student_snapshot(hit.student_id)
+            return RecognitionMatch(
+                student_id=hit.student_id,
+                student_name=student_name,
+                class_name=class_name,
+                confidence=round(hit.confidence, 4),
+                status="already_marked",
+            )
 
         if not self.settings.hybrid_learning_enabled:
             return self._mark_direct_attendance(hit, now, event_type, device_id)

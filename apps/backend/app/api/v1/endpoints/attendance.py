@@ -33,7 +33,7 @@ from app.schemas.recognition import (
     RecognitionResponse,
 )
 from app.services.attendance.service import AttendanceService
-from app.services.face.index import FaceEncodingIndex
+from app.services.face.encoding_index import FaceEncodingIndex
 from app.services.attendance.rule_engine import calculate_status
 from app.services.face.recognizer import FaceRecognitionService, MatchResult
 from app.services.face.hybrid_learning import HybridLearningProcessor
@@ -101,21 +101,6 @@ def _camera_stream_endpoint(camera) -> str:
 def _capture_mapped_camera_frame(camera) -> bytes:
     stream_endpoint = _camera_stream_endpoint(camera)
 
-    # Prefer OpenCV for RTSP/HTTP streams when available.
-    try:
-        import cv2
-
-        capture = cv2.VideoCapture(stream_endpoint)
-        ok, frame = capture.read()
-        capture.release()
-        if ok and frame is not None:
-            encoded_ok, encoded = cv2.imencode(".jpg", frame)
-            if encoded_ok:
-                return bytes(encoded.tobytes())
-    except Exception:
-        pass
-
-    # HTTP fallback when OpenCV stream grab fails.
     if not stream_endpoint.startswith("http://") and not stream_endpoint.startswith("https://"):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -634,7 +619,8 @@ def get_recognition_metrics(db: Session = Depends(get_db), _=Depends(require_adm
 
     known = encoding_repo.list_all()
     student_ids = {item.student_id for item in known}
-    accuracy = recognizer.estimate_accuracy(known)
+    known_vectors = [(item.student_id, encoding_repo.parse_encoding(item)) for item in known]
+    accuracy = recognizer.estimate_accuracy(known_vectors)
     adaptive_count = sum(1 for item in known if item.source == "adaptive")
 
     return RecognitionAccuracyMetrics(

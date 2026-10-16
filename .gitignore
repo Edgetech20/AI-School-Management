@@ -63,3 +63,6 @@ face_data/
 !vite.config.ts
 !tsconfig.json
 !postcss.config.js
+
+# Claude Code memory
+.claude/

@@ -2,199 +2,201 @@
 
 School attendance platform with face recognition, rule-based attendance processing, parent notification logging, and a React admin dashboard.
 
-## What Has Been Delivered
+## Features
 
-- Backend API with FastAPI, SQLAlchemy, MySQL support
+- FastAPI backend with SQLAlchemy and MySQL (XAMPP/MariaDB)
+- dlib-based face recognition (128-d embeddings via `face_recognition` library)
+- Hybrid learning processor: high/medium/low confidence paths with adaptive sampling
+- Fernet AES encryption for face encodings at rest
 - Attendance domain engine (check-in/check-out, status calculation)
-- Notification subsystem abstraction (console provider implemented; Twilio/SMTP adapters ready to plug in)
-- Student, face-encoding, attendance, rule, and notification APIs
-- Improved face matching logic with sample-aware scoring and margin checks
-- Dashboard includes recognition accuracy percentage
-- Continuous gate mode for webcam scanning (no per-student button press)
-- Student CSV bulk import + sample sheet download
-- Manual attendance override API and UI
-- Attendance export to CSV/XLSX
-- Unknown-face admin alerts in notification feed
-- Role split support (`admin`, `teacher`) with rate-limited login
-- Daily/weekly/monthly analytics APIs with graph pages
-- Queue-based recognition ingestion (`enqueue` + worker processing + retry)
-- Runtime scheduler for queue polling and daily summary notifications
-- Face encoding encryption-at-rest support
-- Audit trail model and audit log page
-- Multi-camera device/location mapping screens
-- React + Vite + Tailwind admin dashboard with operational modules
-- Infrastructure scripts for local setup with XAMPP MySQL
-- CI workflow for backend sanity checks and frontend build
+- Parent notification subsystem (console provider; SMTP/SMS adapters ready)
+- Continuous gate mode webcam scanning with multi-frame voting
+- Student CSV bulk import and attendance export (CSV/XLSX)
+- Manual attendance override and audit trail
+- Daily/weekly/monthly analytics with graph pages
+- Queue-based recognition ingestion with runtime scheduler
+- Multi-camera device/location mapping
+- Role-based access (`admin`, `teacher`) with rate-limited login
+- React + Vite + Tailwind admin dashboard
 
 ## Repository Layout
 
-- [apps/backend](apps/backend): FastAPI backend service
-- [apps/frontend](apps/frontend): React admin application
-- [infra/docker](infra/docker): Local infrastructure definitions
-- [infra/scripts](infra/scripts): Developer bootstrap scripts
-
-## Backend Highlights
-
-API base path: `/api/v1`
-
-Core endpoints:
-
-- `GET /health`
-- `POST /api/v1/auth/login`
-- `GET /api/v1/auth/me`
-- `GET/POST/PUT/DELETE /api/v1/students` (admin)
-- `POST /api/v1/face-encodings` (admin)
-- `GET /api/v1/face-encodings/student/{student_id}` (admin)
-- `POST /api/v1/attendance/event` (admin)
-- `POST /api/v1/attendance/recognize` (admin, multipart frame upload, requires AI extras)
-- `POST /api/v1/attendance/recognize/enqueue` (admin/teacher, queued ingestion)
-- `POST /api/v1/attendance/recognize/worker/process` (admin, queue worker trigger)
-- `GET /api/v1/attendance/recognition-metrics` (admin, estimated recognition accuracy)
-- `GET /api/v1/attendance` (admin)
-- `PUT /api/v1/attendance/{attendance_id}/override` (admin/teacher)
-- `GET /api/v1/attendance/export?format=csv|xlsx` (admin/teacher)
-- `GET /api/v1/analytics/daily` (admin/teacher)
-- `GET /api/v1/analytics/weekly` (admin/teacher)
-- `GET /api/v1/analytics/monthly` (admin/teacher)
-- `GET /api/v1/students/import-template` (admin, CSV template)
-- `POST /api/v1/students/import-csv` (admin, bulk student import)
-- `GET/POST/PUT /api/v1/cameras` (admin, camera-location mapping)
-- `GET /api/v1/audit` (admin)
-- `GET/PUT /api/v1/rules` (admin)
-- `GET /api/v1/notifications` (admin)
-- `POST /api/v1/notifications/daily-summary` (admin)
-- `GET/PUT /api/v1/settings/notifications` (admin, SMTP/SMS + Hybrid Learning setup)
-
-### Attendance Rule Logic
-
-Status evaluation now follows:
-
-- `Present`: check-in and check-out both exist for the same day and minimum hours are completed
-- `Late`: check-in and check-out exist, minimum hours are completed, check-in is after threshold
-- `Half-day`: check-in and check-out exist, but worked hours are below minimum
-- `Absent`: missing check-in or missing check-out, or too little attendance duration
-
-Rules are configurable through `/api/v1/rules`.
-
-## Frontend Highlights
-
-Dashboard modules:
-
-- Overview dashboard (student and attendance summary)
-- Student management (create + list)
-- Attendance event capture (manual check-in/check-out simulation)
-- Rule configuration
-- Notification log viewer
-- Live webcam gate mode with continuous auto-capture
-- Student CSV import + template download tools
+```
+apps/
+  backend/   FastAPI backend service
+  frontend/  React admin application
+infra/
+  attendance_db.sql   Database schema reference
+```
 
 ## Local Development Setup
 
-## 1) Start database
+### Prerequisites
 
-```bash
-# Start MySQL in XAMPP and create database if needed
-mysql -u root -e "CREATE DATABASE IF NOT EXISTS attendance_db;"
+- [XAMPP](https://www.apachefriends.org/) (MySQL/MariaDB)
+- [Python 3.11+](https://www.python.org/)
+- [uv](https://docs.astral.sh/uv/) — fast Python package manager (`pip install uv`)
+- [Node.js 18+](https://nodejs.org/)
+
+### 1. Database
+
+Start MySQL in XAMPP, then create the database:
+
+```sql
+CREATE DATABASE IF NOT EXISTS school_management;
 ```
 
-## 2) Backend setup and run
+Import the schema:
+
+```bash
+mysql -u root school_management < infra/attendance_db.sql
+```
+
+### 2. Backend
 
 ```bash
 cd apps/backend
-python -m venv .venv
-# Windows PowerShell
-.\.venv\Scripts\Activate.ps1
-pip install -e .
-# Optional for live image recognition endpoint
-pip install -e ".[ai]"
-copy .env.example .env
-alembic -c alembic.ini upgrade head
-python scripts/seed_data.py
 
-cd apps/backend
-.\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --port 8000
+# Copy and edit environment variables
+copy .env.example .env   # Windows
+# cp .env.example .env   # Mac/Linux
+
+# Install dependencies (creates .venv automatically)
+uv sync
+
+# Install face recognition extras (dlib pre-built wheel, no CMake needed)
+uv sync --extra ai
+
+# Start the server
+uv run uvicorn app.main:app --host 0.0.0.0 --port 8000
 ```
 
-## 3) Frontend setup and run
+Key `.env` values to configure:
+
+| Variable | Description |
+|---|---|
+| `DATABASE_URL` | `mysql+pymysql://root:@localhost:3306/school_management` |
+| `JWT_SECRET_KEY` | Random 64-char hex string |
+| `FACE_ENCODING_ENCRYPTION_KEY` | Fernet key (`python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"`) |
+| `ALLOWED_ORIGINS` | Frontend URL, e.g. `http://localhost:5173` |
+
+### 3. Frontend
 
 ```bash
 cd apps/frontend
 npm install
-copy .env.example .env
-
-cd apps/frontend
+# Copy and edit environment variables
+copy .env.example .env   # Windows
+# cp .env.example .env   # Mac/Linux
 npm run dev
 ```
 
-Frontend default URL: `http://localhost:5173`
-Backend default URL: `http://localhost:8000`
+Frontend: `http://localhost:5173`  
+Backend: `http://localhost:8000`
 
-## Recognition Quality Notes
+## Face Recognition Notes
 
-- Upload 3 to 5 clear frontal photos per student through the student face upload flow.
-- Use varied lighting and small pose variation to improve matching robustness.
-- View estimated model quality in the dashboard `Recognition Accuracy` card.
+- Uses **dlib only** (`dlib-bin` pre-built wheel). No OpenCV required.
+- Upload 3–5 clear frontal photos per student through the student face-upload flow.
+- Use varied lighting and slight pose variation for better matching robustness.
+- Tolerance default: `0.65` (lower = stricter). Adjust via `FACE_MATCH_TOLERANCE` in `.env`.
 
-## Hybrid Recognition Flow (Sequence)
+### Hybrid Learning Thresholds
+
+The confidence formula is `1 - (distance / tolerance)`. Real-world dlib distances for good matches are typically `0.15–0.30`, giving confidence of `55%–77%`. The thresholds are calibrated accordingly:
+
+| Setting | Default | Meaning |
+|---|---|---|
+| `HYBRID_HIGH_CONFIDENCE_THRESHOLD` | `0.70` | Distance ≤ 0.195 — marks attendance + adaptive sample |
+| `HYBRID_MEDIUM_CONFIDENCE_THRESHOLD` | `0.45` | Distance ≤ 0.357 — marks attendance + flags for review |
+| Below medium | — | Logged as unknown, no attendance marked |
+
+Hybrid learning can be toggled at runtime via the Setup page (Settings → Notifications & Hybrid Learning).
+
+## Hybrid Recognition Flow
 
 ```mermaid
 sequenceDiagram
-	participant Cam as Camera/Webcam
-	participant API as Attendance API
-	participant Rec as Face Recognizer
-	participant Hybrid as Hybrid Processor
-	participant DB as DB (Attendance/Events/Settings)
-	participant Review as Review Queue
+    participant Cam as Camera/Webcam
+    participant API as Attendance API
+    participant Rec as Face Recognizer
+    participant Hybrid as Hybrid Processor
+    participant DB as DB (Attendance/Events/Settings)
+    participant Review as Review Queue
 
-	Cam->>API: POST /attendance/recognize(/mapped)
-	API->>DB: Read system_settings.hybrid_learning_enabled
-	API->>Rec: Detect + match faces
-	Rec-->>API: Match candidates + confidence/margin
-	API->>Hybrid: process_match(...)
-	alt High confidence
-		Hybrid->>DB: Mark attendance + event log
-		Hybrid->>DB: Add adaptive sample (if margin eligible)
-	else Medium confidence
-		Hybrid->>DB: Mark attendance + event log
-		Hybrid->>Review: Create pending verification item
-	else Low confidence / unknown
-		Hybrid->>DB: Log unknown/no_face
-	end
-	API-->>Cam: RecognitionResponse (matches/status)
+    Cam->>API: POST /attendance/recognize(/mapped)
+    API->>DB: Read system_settings.hybrid_learning_enabled
+    API->>Rec: Detect + match faces (dlib 128-d)
+    Rec-->>API: Match candidates + confidence/margin
+    API->>Hybrid: process_match(...)
+    alt Duplicate within window (120s)
+        Hybrid->>DB: Log duplicate_skipped
+        Hybrid-->>API: RecognitionMatch(status=already_marked)
+    else High confidence (≥ 0.70)
+        Hybrid->>DB: Mark attendance + event log
+        Hybrid->>DB: Add adaptive sample (if margin eligible)
+    else Medium confidence (≥ 0.45)
+        Hybrid->>DB: Mark attendance + event log
+        Hybrid->>Review: Create pending verification item
+    else Low confidence / unknown
+        Hybrid->>DB: Log unknown/no_face
+    end
+    API-->>Cam: RecognitionResponse (matches/status)
 ```
 
-## Default Admin Credentials
+## API Reference
 
-- Username: `admin`
-- Password: `Admin@123`
+Base path: `/api/v1`
 
-Change these in `apps/backend/.env` before production usage.
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| GET | `/health` | — | Health check |
+| POST | `/auth/login` | — | Get JWT token |
+| GET | `/auth/me` | any | Current user |
+| GET/POST/PUT/DELETE | `/students` | admin | Student management |
+| POST | `/students/{id}/face` | admin | Upload face images |
+| POST | `/attendance/recognize` | admin/teacher | Webcam frame recognition |
+| POST | `/attendance/recognize/mapped` | admin/teacher | Mapped camera recognition |
+| POST | `/attendance/recognize/enqueue` | admin/teacher | Queue-based ingestion |
+| GET | `/attendance/recognition-metrics` | admin | Recognition accuracy |
+| GET | `/attendance` | admin | Attendance records |
+| PUT | `/attendance/{id}/override` | admin/teacher | Manual override |
+| GET | `/attendance/export` | admin/teacher | CSV/XLSX export |
+| GET | `/analytics/daily` | admin/teacher | Daily stats |
+| GET | `/analytics/weekly` | admin/teacher | 7-day trend |
+| GET | `/analytics/monthly` | admin/teacher | Monthly heatmap |
+| GET/PUT | `/rules` | admin | School time rules |
+| GET/POST/PUT | `/cameras` | admin | Camera device mapping |
+| GET | `/notifications` | admin | Notification feed |
+| GET | `/audit` | admin | Audit trail |
+| GET/PUT | `/settings/notifications` | admin | SMTP/SMS + Hybrid setup |
 
-Default teacher credentials (optional role):
+## Attendance Status Logic
 
-- Username: `teacher`
-- Password: `Teacher@123`
+| Status | Condition |
+|---|---|
+| `Present` | Check-in + check-out, minimum hours met, on time |
+| `Late` | Check-in + check-out, minimum hours met, check-in after threshold |
+| `Half-day` | Check-in + check-out, below minimum hours |
+| `Pending` | Check-in recorded, check-out not yet received |
+| `Absent` | No check-in by end of day |
 
-## Security Hardening Included
+Rules configurable via `/api/v1/rules`.
 
-- JWT-based role checks for sensitive APIs
-- Login rate limiting per client IP
-- Security response headers (CSP, frame deny, mime sniffing protection)
-- Device-aware recognition event logging and duplicate mark prevention window
-- Face encoding encryption-at-rest when `FACE_ENCODING_ENCRYPTION_KEY` is configured
+## Default Credentials
 
-Note: keep `JWT_SECRET_KEY` strong, run behind HTTPS, and restrict DB/network access in production.
+| Role | Username | Password |
+|---|---|---|
+| Admin | `admin` | `Admin@123` |
+| Teacher | `teacher` | `Teacher@123` |
 
-## Frontend Reporting Pages
+Change these in `apps/backend/.env` before production.
 
-- Dashboard live analytics widgets
-- Weekly report page with 7-day trend graph
-- Monthly report page with heatmap-style grid
-- Cameras page for multi-location device mapping
-- Audit page for mutation trail visibility
+## Security
 
-## Next Steps
-
-1. Add liveness checks and anti-spoofing.
-2. Add confusion-matrix style recognition reports per class/student.
-3. Expand integration tests for recognition and attendance endpoints.
+- JWT role checks on all sensitive endpoints
+- Login rate limiting per client IP (10 req/min)
+- Security response headers (X-Frame-Options, X-Content-Type-Options, Referrer-Policy)
+- Duplicate mark prevention window (120s per device)
+- Face encoding encryption-at-rest (Fernet AES-128)
+- Keep `JWT_SECRET_KEY` strong, run behind HTTPS, restrict DB access in production
