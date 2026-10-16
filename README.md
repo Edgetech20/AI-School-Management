@@ -2,6 +2,35 @@
 
 School attendance platform with face recognition, rule-based attendance processing, parent notification logging, and a React admin dashboard.
 
+## Tech Stack
+
+**Backend**
+
+| Layer | Technology |
+|---|---|
+| Runtime | Python 3.11 |
+| Framework | FastAPI 0.115 |
+| ORM | SQLAlchemy 2.0 |
+| Database | MySQL / MariaDB (XAMPP) |
+| Migrations | Alembic |
+| Auth | JWT (`python-jose`) + Passlib bcrypt |
+| Face Recognition | dlib 128-d embeddings via `face_recognition` + `dlib-bin` |
+| Encryption | Fernet AES-128 (`cryptography`) |
+| Task Queue | In-process scheduler + queue worker |
+| Package Manager | uv |
+
+**Frontend**
+
+| Layer | Technology |
+|---|---|
+| Framework | React 18 |
+| Language | TypeScript |
+| Build tool | Vite |
+| Styling | Tailwind CSS |
+| State / Data | TanStack Query (React Query) |
+| HTTP client | Axios |
+| Charts | Recharts |
+
 ## Features
 
 - FastAPI backend with SQLAlchemy and MySQL (XAMPP/MariaDB)
@@ -200,3 +229,66 @@ Change these in `apps/backend/.env` before production.
 - Duplicate mark prevention window (120s per device)
 - Face encoding encryption-at-rest (Fernet AES-128)
 - Keep `JWT_SECRET_KEY` strong, run behind HTTPS, restrict DB access in production
+
+## Roadmap — Upcoming Features
+
+This project is evolving into a **complete multi-tenant school management system**. Planned modules:
+
+### Multi-Tenancy
+- [ ] School / organisation isolation (tenant per schema or per row)
+- [ ] Super-admin portal for onboarding new schools
+- [ ] Per-tenant branding (logo, school name, timezone)
+- [ ] Subscription and plan management
+
+### Student Information System
+- [ ] Full student profiles (address, emergency contacts, medical notes)
+- [ ] Class and section management with timetable builder
+- [ ] Teacher assignment and subject mapping
+- [ ] Academic year / term configuration
+
+### Fees Management
+- [ ] Fee structure builder (tuition, transport, lab, etc.)
+- [ ] Per-student fee ledger and payment tracking
+- [ ] Installment plans and due-date reminders
+- [ ] Receipt generation (PDF)
+- [ ] Overdue alerts sent to parents via SMS / email
+
+### Notifications & Communication
+- [ ] Real-time parent notifications (check-in, check-out, absence, late arrival)
+- [ ] Bulk SMS and email broadcast to class or school
+- [ ] In-app announcement board for teachers and admins
+- [ ] WhatsApp Business API integration (optional)
+
+### Examinations & Results
+- [ ] Exam schedule management
+- [ ] Marks entry and grade calculation
+- [ ] Report card generation (PDF)
+- [ ] Student performance analytics per subject and term
+
+### Payroll & Staff Management
+- [ ] Staff profiles (teachers, support staff)
+- [ ] Salary structure and monthly payroll processing
+- [ ] Leave management (casual, sick, earned)
+- [ ] Payslip generation (PDF)
+
+### Library Management
+- [ ] Book inventory and catalogue
+- [ ] Issue / return tracking with due-date alerts
+- [ ] Fine calculation for overdue returns
+
+### Transport Management
+- [ ] Route and vehicle management
+- [ ] Student-to-route assignment
+- [ ] Driver and vehicle tracking integration (GPS ready)
+
+### Face Recognition Improvements
+- [ ] Liveness detection / anti-spoofing
+- [ ] GPU-accelerated inference (CUDA dlib build)
+- [ ] Confusion-matrix accuracy reports per class
+- [ ] Multi-face classroom scan mode
+
+### Infrastructure
+- [ ] Docker Compose for local and production deployment
+- [ ] REST API versioning (v2 with OpenAPI 3.1 spec)
+- [ ] Webhook support for third-party integrations
+- [ ] Mobile app (React Native) for parents and teachers
