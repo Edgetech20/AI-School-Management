@@ -1,0 +1,24 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  margin: 0;
+  font-family: "Source Sans 3", sans-serif;
+  background:
+    radial-gradient(circle at 10% 0%, rgba(209, 73, 91, 0.07), transparent 45%),
+    radial-gradient(circle at 100% 20%, rgba(0, 121, 140, 0.08), transparent 38%),
+    #f5f5ee;
+}
+
+.input {
+  @apply rounded-lg border border-slate-200 px-3 py-2 outline-none transition focus:border-accent2;
+}
+
+.btn {
+  @apply rounded-lg bg-ink px-4 py-2 font-semibold text-white transition hover:opacity-90;
+}

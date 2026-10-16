@@ -1,0 +1,65 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+.eggs/
+.pytest_cache/
+.mypy_cache/
+.pyre/
+.venv/
+venv/
+ENV/
+env/
+
+# Project environment files
+.env
+.env.*
+
+# Databases / local data
+*.sqlite3
+*.db
+*.db-journal
+
+# Node / frontend
+node_modules/
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+
+# Build artifacts
+build/
+dist/
+coverage/
+htmlcov/
+
+# IDE / editor
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# OS / temp
+.tmp/
+tmp/
+*.log
+
+# Local app runtime data
+uploads/
+media/
+face_data/
+
+# Keep source and configs tracked
+!README.md
+!requirements*.txt
+!pyproject.toml
+!package.json
+!package-lock.json
+!tailwind.config.js
+!vite.config.ts
+!tsconfig.json
+!postcss.config.js
