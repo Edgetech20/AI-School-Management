@@ -288,7 +288,6 @@ This project is evolving into a **complete multi-tenant school management system
 - [ ] Multi-face classroom scan mode
 
 ### Infrastructure
-- [ ] Docker Compose for local and production deployment
 - [ ] REST API versioning (v2 with OpenAPI 3.1 spec)
 - [ ] Webhook support for third-party integrations
 - [ ] Mobile app (React Native) for parents and teachers
