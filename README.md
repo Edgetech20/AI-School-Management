@@ -234,11 +234,11 @@ Change these in `apps/backend/.env` before production.
 
 This project is evolving into a **complete multi-tenant school management system**. Planned modules:
 
-### Multi-Tenancy
-- [ ] School / organisation isolation (tenant per schema or per row)
-- [ ] Super-admin portal for onboarding new schools
-- [ ] Per-tenant branding (logo, school name, timezone)
-- [ ] Subscription and plan management
+### Multi-Branch Support
+- [ ] Branch / campus management under a single school organisation
+- [ ] Central admin portal with cross-branch visibility
+- [ ] Per-branch staff, students, classes, and cameras
+- [ ] Consolidated reports across all branches
 
 ### Student Information System
 - [ ] Full student profiles (address, emergency contacts, medical notes)
